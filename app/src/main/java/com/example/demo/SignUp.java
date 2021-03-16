@@ -1,13 +1,18 @@
 package com.example.demo;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -34,15 +39,25 @@ public class SignUp extends AppCompatActivity {
         regBtn = findViewById(R.id.reg_btn);
         regToLoginBtn = findViewById(R.id.reg_login_btn);
 
-        regBtn.setOnClickListener(v -> {
+        reference = FirebaseDatabase.getInstance().getReference("Courses");
+
+        /*regBtn.setOnClickListener(v -> {
             rootNode = FirebaseDatabase.getInstance();
-            reference = rootNode.getReference("Courses");
-        });
+
+        });*/
+        //reference = rootNode.getReference("Courses");
         regToLoginBtn.setOnClickListener(v -> {
-            Intent intent = new Intent(SignUp.this, LoginActivity.class);
-            startActivity(intent);
+            openLoginActivity();
         });
+
+
     }
+
+    private void openLoginActivity() {
+        Intent intent = new Intent(SignUp.this, LoginActivity.class);
+        startActivity(intent);
+    }
+
     private Boolean validateName() {
         String val = regName.getEditText().getText().toString();
         if (val.isEmpty()) {
@@ -125,6 +140,7 @@ public class SignUp extends AppCompatActivity {
     }
 
     public void registerUser(View view) {
+
         if (!validateName() | !validatePassword() | !validatePhoneNo() | !validateEmail() | !validateUsername()) {
             return;
         }
@@ -134,6 +150,20 @@ public class SignUp extends AppCompatActivity {
         String phoneNo = regPhoneNo.getEditText().getText().toString();
         String password = regPassword.getEditText().getText().toString();
         UserHelperClass helperClass = new UserHelperClass(name, username, email, phoneNo, password);
-        reference.child(username).setValue(helperClass);
+//        reference = rootNode.getReference("Courses");
+        reference.child(username).setValue(helperClass)
+
+        .addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(SignUp.this, "User registered!", Toast.LENGTH_SHORT).show();
+                openLoginActivity();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(SignUp.this, "Error" + e.getMessage(),  Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
